@@ -1,4 +1,22 @@
 <!DOCTYPE html>
 <head></head>
-<body>bodyyyyy</body>
+<body>bodyyyyy
+
+
+<script src="socket.io/socket.io.js"></script>
+<script>var socket=io();
+
+socket.on('connect', ()=>{
+
+    console.log('connected to server');
+});
+
+socket.on('disconnect', ()=>{
+
+console.log('disconnected from server');
+});
+
+</script>
+
+</body>
 </html>
