@@ -16,7 +16,7 @@ io.on('connection', (socket)=>{
 
         console.log('user disconnected ');
     });
-   socket.emit('newmsg',generatemessage('admin','welcoe from admin'));
+   socket.emit('newmsg',generatemessage('admin','welcome from admin'));
 
 
 
