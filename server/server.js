@@ -4,7 +4,7 @@ const http=require('http');
 const socketio=require('socket.io');
 const port = process.env.PORT || 3000;
 const pubpath=path.join(__dirname , '../public');
-const {generatemessage}=require('./utils/message');
+const {generatemessage, generatelocationmessage}=require('./utils/message');
 var app=express();
 var server= http.createServer(app);
 var io= socketio(server);
@@ -30,6 +30,10 @@ console.log(msg);
 
 io.emit('newmsg',generatemessage(msg.from,msg.text));
 callback(msg.from,msg.text);
+  });
+
+  socket.on('createlocationmsg', function(data){
+    io.emit('newlocationmsg', generatelocationmessage('admin', data.latitude , data.longitude));
   });
    
 
