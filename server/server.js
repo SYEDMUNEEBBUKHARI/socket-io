@@ -2,38 +2,79 @@ const path=require('path');
 const express=require('express');
 const http=require('http');
 const socketio=require('socket.io');
+const {realstring}= require('./utils/validation');
 const port = process.env.PORT || 3000;
 const pubpath=path.join(__dirname , '../public');
+const {Users}= require('./utils/users')
 const {generatemessage, generatelocationmessage}=require('./utils/message');
 var app=express();
 var server= http.createServer(app);
 var io= socketio(server);
+var users=new Users();
 app.use(express.static(pubpath));
+
+
+
 io.on('connection', (socket)=>{
 
     console.log('new user connected');
     socket.on('disconnect', ()=>{
+var user=users.removeuser(socket.id);
+if(user){
+io.to(user.room).emit('updateuser', users.getuserlist(user.room))
+io.to(user.room).emit('newmsg', generatemessage('Admin',`${user.name} has left`))
 
-        console.log('user disconnected ');
+}
+        
     });
-   socket.emit('newmsg',generatemessage('admin','welcome from admin'));
+   
+
+   socket.on('join' , (params , callback)=>{
+     console.log(realstring(params.name));
+     console.log(params.name);
+            if(!realstring(params.name) || !realstring(params.room)){
+
+             return callback('is not string');
+            }
+            socket.join(params.room);
+users.removeuser(socket.id);
+users.addUser(socket.id , params.name , params.room);
+io.to(params.room).emit('updateuser', users.getuserlist(params.room))
+
+            socket.emit('newmsg',generatemessage('admin','welcome from admin :'));
+            socket.broadcast.to(params.room).emit('newmsg', generatemessage('admin',`${params.name} joined`));
+              callback();
+            
+
+   });
 
 
-
-   socket.broadcast.emit('newmsg', generatemessage('admin','new user joined'));
+   
 
 
 
   socket.on('createmsg',(msg,callback)=>{
-console.log(msg);
+var user=users.getuser(socket.id);
+if(user && realstring(msg.text))
+{
+  io.to(user.room).emit('newmsg',generatemessage(user.name ,msg.text));
+
+}
 
 
-io.emit('newmsg',generatemessage(msg.from,msg.text));
 callback(msg.from,msg.text);
   });
 
-  socket.on('createlocationmsg', function(data){
-    io.emit('newlocationmsg', generatelocationmessage('admin', data.latitude , data.longitude));
+  socket.on('createlocationmsg', (data)=>{
+    var user=users.getuser(socket.id);
+if(user )
+{
+ 
+  io.to(user.room).emit('newlocationmsg', generatelocationmessage(user.name , data.latitude , data.longitude));
+ 
+
+}
+    
   });
    
 
